@@ -125,6 +125,19 @@ router.get('/final-rank', async (req, res) => {
   }
 });
 
+// ===== 清除指定评委的所有评分 =====
+router.post('/clear-judge', async (req, res) => {
+  const { judgeId } = req.body;
+  if (!judgeId) return res.status(400).json({ error: '缺少 judgeId' });
+  try {
+    const { rowCount } = await getPool().query('DELETE FROM scores WHERE "judgeId" = $1', [judgeId]);
+    res.json({ success: true, deleted: rowCount });
+  } catch (err) {
+    console.error('清除失败:', err);
+    res.status(500).json({ error: '清除失败' });
+  }
+});
+
 // ===== 数据分析 =====
 router.get('/analysis', async (req, res) => {
   try {
