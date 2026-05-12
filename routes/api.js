@@ -138,6 +138,63 @@ router.post('/clear-judge', async (req, res) => {
   }
 });
 
+// ===== 获取所有评委的详细评分（含评语、教师名） =====
+router.get('/judge-details', async (req, res) => {
+  try {
+    const { rows } = await getPool().query(`
+      SELECT s."judgeId", s."teacherId", t.name, t."group",
+        s.observation, s.communication, s.collaboration,
+        s."qAnalysis", s."qWisdom", s."qPerformance",
+        s."remarkObs", s."remarkCom", s."remarkColl",
+        s."remarkQa", s."remarkQw", s."remarkQp",
+        s."submitTime"
+      FROM scores s
+      JOIN teachers t ON t.id = s."teacherId"
+      WHERE s."isFinal" = 1
+      ORDER BY s."judgeId", s."teacherId"
+    `);
+
+    // 按评委分组
+    const judgeMap = {};
+    rows.forEach(r => {
+      if (!judgeMap[r.judgeId]) judgeMap[r.judgeId] = [];
+      judgeMap[r.judgeId].push({
+        teacherId: r.teacherId,
+        name: r.name,
+        group: r.group,
+        observation: r.observation,
+        communication: r.communication,
+        collaboration: r.collaboration,
+        qAnalysis: r.qAnalysis,
+        qWisdom: r.qWisdom,
+        qPerformance: r.qPerformance,
+        totalScore: (r.observation + r.communication + r.collaboration + r.qAnalysis + r.qWisdom + r.qPerformance),
+        remarks: {
+          observationRemark: r.remarkObs || '',
+          communicationRemark: r.remarkCom || '',
+          collaborationRemark: r.remarkColl || '',
+          qAnalysisRemark: r.remarkQa || '',
+          qWisdomRemark: r.remarkQw || '',
+          qPerformanceRemark: r.remarkQp || ''
+        },
+        submitTime: r.submitTime
+      });
+    });
+
+    // 转为数组
+    const result = Object.keys(judgeMap).map(jid => ({
+      judgeId: parseInt(jid),
+      teacherCount: judgeMap[jid].length,
+      teachers: judgeMap[jid]
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error('获取评委详情失败:', err);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
 // ===== 数据分析 =====
 router.get('/analysis', async (req, res) => {
   try {
