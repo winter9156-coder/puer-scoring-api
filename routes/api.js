@@ -195,25 +195,77 @@ router.get('/judge-details', async (req, res) => {
   }
 });
 
-// ===== 数据分析 =====
+// ===== 数据分析（按教师评委/专家评委分别统计） =====
 router.get('/analysis', async (req, res) => {
   try {
-    const { rows: allScores } = await getPool().query('SELECT * FROM scores WHERE "isFinal" = 1');
+    const { rows: allScores } = await getPool().query(
+      `SELECT s."teacherId", t.name, t."group", s."judgeId",
+        s.observation, s.communication, s.collaboration,
+        s."qAnalysis", s."qWisdom", s."qPerformance"
+      FROM scores s
+      JOIN teachers t ON t.id = s."teacherId"
+      WHERE s."isFinal" = 1
+      ORDER BY s."teacherId", s."judgeId"`
+    );
     if (allScores.length === 0) return res.json({ msg: '暂无数据' });
 
-    const totalJudges = new Set(allScores.map(s => s.judgeId)).size;
+    const dims = ['observation','communication','collaboration','qAnalysis','qWisdom','qPerformance'];
 
-    const dims = ['observation', 'communication', 'collaboration', 'qAnalysis', 'qWisdom', 'qPerformance'];
-    const dimAvg = {};
-    dims.forEach(d => {
-      const sum = allScores.reduce((acc, s) => acc + parseFloat(s[d] || 0), 0);
-      dimAvg[d] = parseFloat((sum / allScores.length).toFixed(2));
+    // 按 teacherId 分组，再按评委类型分
+    const teacherMap = {};
+    allScores.forEach(s => {
+      if (!teacherMap[s.teacherId]) {
+        teacherMap[s.teacherId] = {
+          teacherId: s.teacherId, name: s.name, group: s.group,
+          teacherJudges: [], expertJudges: []
+        };
+      }
+      const isExpert = s.judgeId >= 37;
+      if (isExpert) teacherMap[s.teacherId].expertJudges.push(s);
+      else teacherMap[s.teacherId].teacherJudges.push(s);
     });
 
-    res.json({ totalJudges, dimensionAverages: dimAvg, totalScores: allScores.length });
+    // 计算每个教师的统计
+    function calcAvg(arr) {
+      if (!arr || arr.length === 0) return null;
+      const result = { judgeCount: arr.length };
+      dims.forEach(d => {
+        result[d] = parseFloat((arr.reduce((a, s) => a + parseFloat(s[d] || 0), 0) / arr.length).toFixed(2));
+      });
+      result.avgScore = parseFloat((dims.reduce((a, d) => a + result[d], 0)).toFixed(2));
+      return result;
+    }
+
+    const teacherAnalysis = Object.values(teacherMap).map(t => ({
+      teacherId: t.teacherId,
+      name: t.name,
+      group: t.group,
+      byTeacherJudges: calcAvg(t.teacherJudges),
+      byExpertJudges: calcAvg(t.expertJudges),
+      overallAvg: calcAvg([...t.teacherJudges, ...t.expertJudges]).avgScore
+    }));
+
+    // 按综合均分降序
+    teacherAnalysis.sort((a, b) => b.overallAvg - a.overallAvg);
+
+    // 全局统计
+    const allAvgs = teacherAnalysis.map(t => t.overallAvg);
+    const globalTotal = allAvgs.reduce((a, b) => a + b, 0);
+    const sorted = [...teacherAnalysis].sort((a, b) => b.overallAvg - a.overallAvg);
+
+    res.json({
+      teacherAnalysis,
+      globalStats: {
+        totalTeachers: teacherAnalysis.length,
+        totalScores: allScores.length,
+        overallAvg: parseFloat((globalTotal / teacherAnalysis.length).toFixed(2)),
+        highest: sorted.length ? { name: sorted[0].name, score: sorted[0].overallAvg } : null,
+        lowest: sorted.length ? { name: sorted[sorted.length - 1].name, score: sorted[sorted.length - 1].overallAvg } : null
+      }
+    });
   } catch (err) {
     console.error('数据分析失败:', err);
-    res.status(500).json({ error: '服务器错误' });
+    res.status(500).json({ error: '数据分析失败: ' + err.message });
   }
 });
 
