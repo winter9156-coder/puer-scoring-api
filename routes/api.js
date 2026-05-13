@@ -138,6 +138,17 @@ router.post('/clear-judge', async (req, res) => {
   }
 });
 
+// ===== 清除所有评分数据（重置系统） =====
+router.post('/clear-all', async (req, res) => {
+  try {
+    const { rowCount } = await getPool().query('DELETE FROM scores');
+    res.json({ success: true, deleted: rowCount, message: '已清除所有评分数据' });
+  } catch (err) {
+    console.error('清除全部数据失败:', err);
+    res.status(500).json({ error: '清除失败' });
+  }
+});
+
 // ===== 获取所有评委的详细评分（含评语、教师名） =====
 router.get('/judge-details', async (req, res) => {
   try {
