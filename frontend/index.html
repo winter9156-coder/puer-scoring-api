@@ -8,6 +8,24 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#f0f4f9;font-family:-apple-system,'Segoe UI',sans-serif;padding:20px;color:#1e293b}
 .ct{max-width:1640px;margin:0 auto}
+
+/* ===== 登录遮罩层 ===== */
+.login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a5276 0%,#2c7da0 50%,#3b82f6 100%);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+.login-overlay.hidden{opacity:0;pointer-events:none}
+.login-box{background:#fff;border-radius:28px;padding:40px 36px;width:420px;max-width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.login-box .logo-img{height:52px;border-radius:10px;margin-bottom:16px}
+.login-box h2{font-size:1.35rem;color:#1a5276;margin-bottom:6px}
+.login-box .sub{font-size:.82rem;color:#64748b;margin-bottom:24px}
+.login-box label{display:block;text-align:left;font-weight:600;font-size:.88rem;color:#374151;margin-bottom:6px}
+.login-box select,.login-box input[type=password]{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:12px;font-size:.95rem;background:#f8fafc;transition:border-color .2s;outline:none;margin-bottom:14px}
+.login-box select:focus,.login-box input[type=password]:focus{border-color:#2c7da0;box-shadow:0 0 0 3px rgba(44,125,160,.15)}
+.login-box .btn-login{width:100%;padding:12px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;background:#2c7da0;color:#fff;transition:background .2s,transform .1s;margin-top:4px}
+.login-box .btn-login:hover{background:#245f7d}
+.login-box .btn-login:active{transform:scale(.98)}
+.login-box .err-msg{color:#dc2626;font-size:.82rem;margin-top:10px;display:none;background:#fef2f2;padding:8px 12px;border-radius:10px;border:1px solid #fecaca}
+.login-box .err-msg.show{display:block}
+
+/* ===== 主界面 ===== */
 .hdr{background:#fff;border-radius:28px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .hdr h1{font-size:1.4rem;color:#1a5276;margin-bottom:10px}
 .jb{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#f1f7fb;padding:10px 16px;border-radius:40px}
@@ -60,7 +78,23 @@ body{background:#f0f4f9;font-family:-apple-system,'Segoe UI',sans-serif;padding:
 </style>
 </head>
 <body>
-<div class="ct">
+
+<!-- 登录遮罩 -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <img src="https://wcn0506-1426318802.cos-website.ap-beijing.myqcloud.com/logo.jpg" class="logo-img" alt="logo">
+    <h2>🔐 身份验证</h2>
+    <p class="sub">请选择您的姓名并输入密码进入评分系统</p>
+    <label>👤 选择姓名：</label>
+    <select id="loginSel"><option value="0">-- 请选择您的姓名 --</option></select>
+    <label>🔑 输入密码：</label>
+    <input type="password" id="loginPwd" placeholder="请输入6位密码" autocomplete="off" onkeypress="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">✅ 确认登录</button>
+    <div class="err-msg" id="loginErr">❌ 密码错误，请重新输入</div>
+  </div>
+</div>
+
+<div class="ct" id="mainArea" style="display:none;">
 <div class="hdr">
   <h1 style="display:flex;align-items:center;gap:10px;"><img src="https://wcn0506-1426318802.cos-website.ap-beijing.myqcloud.com/logo.jpg" style="height:38px;border-radius:6px;" alt="logo"> 蒲二幼教师基本功评分系统</h1>
   <div class="jb">
@@ -81,19 +115,52 @@ body{background:#f0f4f9;font-family:-apple-system,'Segoe UI',sans-serif;padding:
 <script>
 const API='https://puer-scoring-api.onrender.com/api';
 const JN={1:'刘沂柠',2:'杨柳',3:'郭宇涵',4:'张雨晴',5:'李昕怡',6:'蔡涵',7:'周岩',8:'芦丽',9:'王文雪',10:'徐可新',11:'张建梅',12:'孙乐',13:'张冉',14:'纪思曼',15:'都建昀',16:'尹亭蕊',17:'张斯婕',18:'苏琦蕊',19:'邢佳杰',20:'王旻姣',21:'刘茜',22:'谷雨',23:'王玉',24:'徐佳',25:'李亚洁',26:'姜媛',27:'鲁晨曦',28:'李梦',29:'马正颖',30:'富佳妍',31:'程紫玉',32:'田鑫颖',33:'李一帆',34:'伊金宝',35:'张淼',36:'李晓娇',37:'王洋洋',38:'李念东',39:'吴瑸',40:'刘玉红',41:'刘珊珊',42:'刘梦',43:'李颖王兰'};
+// 密码表（每人一个6位随机码）
+const PWDS={'1':'EU6D5F','2':'GHGEWT','3':'BF54Q6','4':'DT2VAG','5':'N9WE5K','6':'KUF65A','7':'73TG8U','8':'S9R79K','9':'D784CR','10':'P5YH67','11':'FSNKFD','12':'HQLMB4','13':'X2DB9W','14':'LLJM6Z','15':'GSAQ2D','16':'NFNEHW','17':'7XMHHU','18':'PJ978C','19':'YNBAD3','20':'ABP5MS','21':'SR3YKA','22':'VGPJ26','23':'UA35MX','24':'F3UD5V','25':'TRC6BC','26':'DS63QZ','27':'AQ9D4Y','28':'R6M342','29':'TN72NM','30':'FVZT6Q','31':'67P78C','32':'BMK2RK','33':'SZ8VDM','34':'WSLSDF','35':'ZZ5VBB','36':'UUJH83','37':'5EA5YT','38':'KPTBUY','39':'NNTVSC','40':'B9EMUM','41':'AQWUTS','42':'44XYYP','43':'QZU94B'};
 const TL=[{id:1,name:'刘沂柠',group:'蒲安里园班长组'},{id:2,name:'杨柳',group:'蒲安里园班长组'},{id:3,name:'郭宇涵',group:'蒲安里园班长组'},{id:4,name:'张雨晴',group:'蒲安里园班长组'},{id:5,name:'李昕怡',group:'蒲安里园班长组'},{id:6,name:'蔡涵',group:'蒲安里园班长组'},{id:7,name:'周岩',group:'建邦华府园班长组'},{id:8,name:'芦丽',group:'建邦华府园班长组'},{id:9,name:'王文雪',group:'建邦华府园班长组'},{id:10,name:'徐可新',group:'建邦华府园班长组'},{id:11,name:'张建梅',group:'建邦华府园班长组'},{id:12,name:'孙乐',group:'建邦华府园班长组'},{id:13,name:'张冉',group:'蒲安里园教师组'},{id:14,name:'纪思曼',group:'蒲安里园教师组'},{id:15,name:'都建昀',group:'蒲安里园教师组'},{id:16,name:'尹亭蕊',group:'蒲安里园教师组'},{id:17,name:'张斯婕',group:'蒲安里园教师组'},{id:18,name:'苏琦蕊',group:'蒲安里园教师组'},{id:19,name:'邢佳杰',group:'建邦华府园教师组'},{id:20,name:'王旻姣',group:'建邦华府园教师组'},{id:21,name:'刘茜',group:'建邦华府园教师组'},{id:22,name:'谷雨',group:'建邦华府园教师组'},{id:23,name:'王玉',group:'建邦华府园教师组'},{id:24,name:'徐佳',group:'建邦华府园教师组'},{id:25,name:'李亚洁',group:'蒲安里园保育教师组'},{id:26,name:'姜媛',group:'蒲安里园保育教师组'},{id:27,name:'鲁晨曦',group:'蒲安里园保育教师组'},{id:28,name:'李梦',group:'蒲安里园保育教师组'},{id:29,name:'马正颖',group:'蒲安里园保育教师组'},{id:30,name:'富佳妍',group:'蒲安里园保育教师组'},{id:31,name:'程紫玉',group:'建邦华府园保育教师组'},{id:32,name:'田鑫颖',group:'建邦华府园保育教师组'},{id:33,name:'李一帆',group:'建邦华府园保育教师组'},{id:34,name:'伊金宝',group:'建邦华府园保育教师组'},{id:35,name:'张淼',group:'建邦华府园保育教师组'},{id:36,name:'李晓娇',group:'建邦华府园保育教师组'}];
 
-let judgeId=0, myScores=[], finalRank=[], judgeDetails=[], cache={}, groupOpen={};
+let judgeId=0, myScores=[], finalRank=[], judgeDetails=[], cache={}, groupOpen={}, loggedIn=false;
 
 function cap(v,m){v=parseInt(v)||0;return v<0?0:v>m?m:v}
 function qs(s){return document.querySelector(s)}
-function qsa(s){return document.querySelectorAll(s)}
 
-function init(){
-  const sel=document.getElementById('judgeSel');
+// ===== 登录逻辑 =====
+function initLogin(){
+  const sel=document.getElementById('loginSel');
   for(let i=1;i<=43;i++){const o=document.createElement('option');o.value=i;o.textContent=JN[i];sel.appendChild(o)}
-  sel.onchange=function(){judgeId=parseInt(this.value)||0;updateUI();if(judgeId)loadScores()}
+}
+
+function doLogin(){
+  const uid=parseInt(document.getElementById('loginSel').value)||0;
+  const pwd=document.getElementById('loginPwd').value.trim().toUpperCase();
+  const errEl=document.getElementById('loginErr');
+  errEl.className='err-msg';
+  if(!uid){errEl.textContent='❌ 请先选择您的姓名';errEl.classList.add('show');return;}
+  if(!pwd){errEl.textContent='❌ 请输入密码';errEl.classList.add('show');return;}
+  if(PWDS[uid]!==pwd){
+    errEl.textContent='❌ 密码错误，请重新输入';
+    errEl.classList.add('show');
+    document.getElementById('loginPwd').value='';
+    document.getElementById('loginPwd').focus();
+    return;
+  }
+  // 验证通过
+  judgeId=uid;
+  loggedIn=true;
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('mainArea').style.display='';
+  initMain();
+}
+
+// ===== 主系统逻辑 =====
+function initMain(){
+  // 设置评委下拉并锁定
+  const sel=document.getElementById('judgeSel');
+  sel.value=judgeId;
+  sel.disabled=true;  // 已登录后不可切换
+  updateUI();
   renderTeachers();
+  loadScores();
   checkBackend();
 }
 
@@ -102,6 +169,7 @@ async function checkBackend(){
 }
 
 function renderTeachers(){
+  if(!loggedIn)return;
   const gs={};
   TL.forEach(t=>{if(!gs[t.group])gs[t.group]=[];gs[t.group].push(t)});
   let h='';
@@ -110,7 +178,6 @@ function renderTeachers(){
     if(groupOpen[key]===undefined)groupOpen[key]=false;
     h+='<div class="gc"><div class="gt" onclick="toggleGroup(\''+key+'\')">📋 '+gn+'<span class="arw'+(groupOpen[key]?' op':'')+'">▼</span></div><div class="grid" id="g_'+key+'"'+(groupOpen[key]?'':' style="display:none"')+'>';
     gs[gn].forEach((t,i)=>{
-      // 禁止自评：评委和自己同名的不显示
       if(judgeId === t.id && judgeId <= 36) return;
       const sid='t'+t.id;
       if(!cache[sid])cache[sid]={sc:{ob:0,cm:0,cl:0,qa:0,qw:0,qp:0},rm1:'',rm2:'',rm3:'',sv:false,ed:false,open:false};
@@ -142,7 +209,6 @@ function dimHTML(f,lb,min,max,sid){
 function sugHTML(sid,c,sec){
   if(sec==1)return '<div class="sr" style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px"><lb>📝 小组教研建议说明</lb><textarea rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:6px;font-size:.8rem;resize:vertical" placeholder="小组教研评价建议..." onchange="updateRemark(\''+sid+'\',1,this)">'+(c.rm1||'')+'</textarea></div>';
   if(sec==2)return '<div class="sr" style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px"><lb>📝 即时问答建议说明</lb><textarea rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:6px;font-size:.8rem;resize:vertical" placeholder="即时问答评价建议..." onchange="updateRemark(\''+sid+'\',2,this)">'+(c.rm2||'')+'</textarea></div>';
-  // sec==3: 即时问答下方的通用建议说明（所有评委可见）
   return '<div class="sr" style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px"><lb>💡 建议说明</lb><textarea rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:6px;font-size:.8rem;resize:vertical" placeholder="对该教师的建议和说明..." onchange="updateRemark(\''+sid+'\',3,this)">'+(c.rm3||'')+'</textarea></div>';
 }
 
@@ -155,19 +221,17 @@ function startEdit(sid){cache[sid].ed=true;renderTeachers()}
 function updateUI(){
   qs('#btnLoad').disabled=!judgeId;
   qs('#btnSubmit').disabled=!judgeId;
-  qs('#statusJudge').textContent=judgeId?'👤 '+JN[judgeId]:'';
+  qs('#statusJudge').textContent=judgeId?'👤 '+JN[judgeId]+' 🔐已验证':'';
 }
 
 async function loadScores(clr){
-  if(!judgeId)return;
+  if(!judgeId || !loggedIn)return;
   if(clr)cache={};
   myScores=[];finalRank=[];
-  // 所有评委不加载已有数据，页面保持空白（后端数据不变）
   updateUI();renderTeachers();return;
   try{
     const[s,r]=await Promise.all([fetch(API+'/scores/'+judgeId).then(r=>r.json()),fetch(API+'/final-rank').then(r=>r.json())]);
     myScores=s;finalRank=r;
-    // 将已保存的评分加载到缓存
     myScores.forEach(sc=>{
       const sid='t'+sc.teacherId;
       if(!cache[sid])cache[sid]={sc:{ob:0,cm:0,cl:0,qa:0,qw:0,qp:0},rm1:'',rm2:'',rm3:'',sv:false,ed:false,open:false};
@@ -208,7 +272,8 @@ async function submitAll(){
   if(ok)await loadScores();
 }
 
-init();
+// 初始化
+initLogin();
 </script>
 </body>
 </html>
