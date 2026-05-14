@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>蒲二幼评分系统 - 电脑版</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f0f4f9;font-family:-apple-system,'Segoe UI',sans-serif;padding:20px;color:#1e293b}
+.ct{max-width:1640px;margin:0 auto}
+.hdr{background:#fff;border-radius:28px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.hdr h1{font-size:1.4rem;color:#1a5276;margin-bottom:10px}
+.jb{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:#f1f7fb;padding:10px 16px;border-radius:40px}
+.jb select{padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:.9rem;min-width:160px}
+.jb .btn{padding:6px 16px;border:none;border-radius:20px;font-weight:600;font-size:.82rem;cursor:pointer}
+.jb .btn:disabled{opacity:.5;cursor:default}
+.btn-p{background:#2c7da0;color:#fff}
+.btn-s{background:#e2e8f0;color:#1e293b}
+.sb{display:flex;gap:8px;margin-top:8px;font-size:.82rem;color:#2c3e50;flex-wrap:wrap}
+.sb span{background:#e8f0f6;padding:3px 12px;border-radius:20px}
+.gc{background:#fff;border-radius:28px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.03);overflow:hidden}
+.gt{padding:12px 20px;font-size:1.1rem;font-weight:700;background:#fafcff;border-bottom:2px solid #dee7ef;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.gt .arw{margin-left:auto;font-size:.8rem;color:#94a3b8;transition:transform .2s}
+.gt .arw.op{transform:rotate(180deg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:16px;padding:16px}
+.tc{border:1px solid #eef2f8;border-radius:20px;overflow:hidden}
+.ch{padding:10px 16px;background:#f9fbfd;border-bottom:1px solid #eef2f8;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ch .nm{font-size:1rem;font-weight:700;color:#0b3b4f}
+.bdg{padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:600;display:inline-block;margin-left:6px}
+.bdg-s{background:#d1fae5;color:#065f46}
+.bdg-e{background:#fff3cd;color:#856404}
+.mdf{background:none;border:1px solid #94a3b8;border-radius:6px;padding:2px 8px;font-size:.7rem;color:#475569;cursor:pointer;margin-left:4px}
+.rk{background:#eef2ff;padding:2px 8px;border-radius:20px;font-size:.72rem;color:#1e40af}
+.tt{background:#1f5068;color:#fff;padding:2px 10px;border-radius:20px;font-size:.78rem;font-weight:600}
+.sw{display:flex;gap:12px;padding:12px;flex-wrap:wrap}
+.sn{flex:1;min-width:260px;background:#fafcff;border-radius:16px;padding:10px 12px;border:1px solid #e9edf4}
+.sn h4{font-size:.9rem;font-weight:700;color:#1f5068;margin-bottom:8px;border-left:3px solid #3b82f6;padding-left:8px}
+.sr{margin-bottom:10px;border-bottom:1px dashed #e8edf4;padding-bottom:8px}
+.sr lb{display:block;font-weight:600;font-size:.8rem;margin-bottom:4px}
+.sr input{width:80px;padding:5px 8px;border-radius:10px;border:1.5px solid #d0d9e6;text-align:center;font-size:.88rem;font-weight:600;background:#f8faff;transition:border-color .2s,box-shadow .2s;outline:none}
+.sr input:focus{border-color:#2c7da0;box-shadow:0 0 0 3px rgba(44,125,160,.15)}
+.sr textarea{width:100%;border:1.5px solid #d0d9e6;border-radius:10px;padding:6px 8px;font-size:.78rem;resize:vertical;background:#f8faff;transition:border-color .2s;outline:none}
+.sr textarea:focus{border-color:#2c7da0;box-shadow:0 0 0 3px rgba(44,125,160,.1)}
+.stt{background:#e8f0f8;border-radius:12px;padding:4px 8px;text-align:center;font-weight:700;font-size:.8rem;margin-top:6px}
+.cf{padding:0 12px 12px;text-align:right}
+.cf .btn{padding:6px 18px;border:none;border-radius:20px;font-weight:600;font-size:.82rem;cursor:pointer}
+.cf .btn-p{background:#2c7da0;color:#fff}
+.cf .btn-s{background:#d1fae5;color:#065f46}
+.cf .btn-w{background:#fff3cd;color:#856404}
+.abar{margin-top:20px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.md{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);overflow-y:auto;z-index:1000;padding:20px}
+.md.a{display:block}
+.mc{background:#fff;max-width:1100px;margin:20px auto;border-radius:28px;padding:24px 28px;position:relative}
+.mc .cl{position:absolute;top:16px;right:20px;font-size:28px;cursor:pointer;color:#6b7280;background:none;border:none}
+.mt{width:100%;border-collapse:collapse;font-size:.78rem;margin:10px 0}
+.mt th{background:#1a5276;color:#fff;padding:6px 8px;text-align:center}
+.mt td{padding:4px 6px;border:1px solid #e2e8f0;text-align:center}
+.ld{padding:30px;text-align:center;color:#94a3b8}
+@media(max-width:800px){.grid{grid-template-columns:1fr;min-width:0}.sw{flex-direction:column}.jb{flex-direction:column;align-items:stretch}.jb select{width:100%}}
+</style>
+</head>
+<body>
+<div class="ct">
+<div class="hdr">
+  <h1 style="display:flex;align-items:center;gap:10px;"><img src="https://wcn0506-1426318802.cos-website.ap-beijing.myqcloud.com/logo.jpg" style="height:38px;border-radius:6px;" alt="logo"> 蒲二幼教师基本功评分系统</h1>
+  <div class="jb">
+    <label style="font-weight:600;font-size:.9rem;">👤 评委：</label>
+    <select id="judgeSel"><option value="0">-- 请选择 --</option></select>
+    <button class="btn btn-p" id="btnLoad" disabled onclick="loadScores()">暂存</button>
+    <button class="btn btn-s" id="btnSubmit" disabled onclick="submitAll()">一键提交</button>
+  </div>
+  <div class="sb">
+    <span id="statusJudge"></span>
+    <span id="statusBack">🔄 检测后端...</span>
+  </div>
+</div>
+<div id="groups"></div>
+<footer style="margin:16px 0;text-align:center;font-size:.75rem;color:#64748b">本系统为蒲黄榆第二幼儿园自主研发-所有分值上传到COS云服务保存</footer>
+</div>
+
+<script>
+const API='https://puer-scoring-api.onrender.com/api';
+const JN={1:'刘沂柠',2:'杨柳',3:'郭宇涵',4:'张雨晴',5:'李昕怡',6:'蔡涵',7:'周岩',8:'芦丽',9:'王文雪',10:'徐可新',11:'张建梅',12:'孙乐',13:'张冉',14:'纪思曼',15:'都建昀',16:'尹亭蕊',17:'张斯婕',18:'苏琦蕊',19:'邢佳杰',20:'王旻姣',21:'刘茜',22:'谷雨',23:'王玉',24:'徐佳',25:'李亚洁',26:'姜媛',27:'鲁晨曦',28:'李梦',29:'马正颖',30:'富佳妍',31:'程紫玉',32:'田鑫颖',33:'李一帆',34:'伊金宝',35:'张淼',36:'李晓娇',37:'王洋洋',38:'李念东',39:'吴瑸',40:'刘玉红',41:'刘珊珊',42:'刘梦',43:'李颖王兰'};
+const TL=[{id:1,name:'刘沂柠',group:'蒲安里园班长组'},{id:2,name:'杨柳',group:'蒲安里园班长组'},{id:3,name:'郭宇涵',group:'蒲安里园班长组'},{id:4,name:'张雨晴',group:'蒲安里园班长组'},{id:5,name:'李昕怡',group:'蒲安里园班长组'},{id:6,name:'蔡涵',group:'蒲安里园班长组'},{id:7,name:'周岩',group:'建邦华府园班长组'},{id:8,name:'芦丽',group:'建邦华府园班长组'},{id:9,name:'王文雪',group:'建邦华府园班长组'},{id:10,name:'徐可新',group:'建邦华府园班长组'},{id:11,name:'张建梅',group:'建邦华府园班长组'},{id:12,name:'孙乐',group:'建邦华府园班长组'},{id:13,name:'张冉',group:'蒲安里园教师组'},{id:14,name:'纪思曼',group:'蒲安里园教师组'},{id:15,name:'都建昀',group:'蒲安里园教师组'},{id:16,name:'尹亭蕊',group:'蒲安里园教师组'},{id:17,name:'张斯婕',group:'蒲安里园教师组'},{id:18,name:'苏琦蕊',group:'蒲安里园教师组'},{id:19,name:'邢佳杰',group:'建邦华府园教师组'},{id:20,name:'王旻姣',group:'建邦华府园教师组'},{id:21,name:'刘茜',group:'建邦华府园教师组'},{id:22,name:'谷雨',group:'建邦华府园教师组'},{id:23,name:'王玉',group:'建邦华府园教师组'},{id:24,name:'徐佳',group:'建邦华府园教师组'},{id:25,name:'李亚洁',group:'蒲安里园保育教师组'},{id:26,name:'姜媛',group:'蒲安里园保育教师组'},{id:27,name:'鲁晨曦',group:'蒲安里园保育教师组'},{id:28,name:'李梦',group:'蒲安里园保育教师组'},{id:29,name:'马正颖',group:'蒲安里园保育教师组'},{id:30,name:'富佳妍',group:'蒲安里园保育教师组'},{id:31,name:'程紫玉',group:'建邦华府园保育教师组'},{id:32,name:'田鑫颖',group:'建邦华府园保育教师组'},{id:33,name:'李一帆',group:'建邦华府园保育教师组'},{id:34,name:'伊金宝',group:'建邦华府园保育教师组'},{id:35,name:'张淼',group:'建邦华府园保育教师组'},{id:36,name:'李晓娇',group:'建邦华府园保育教师组'}];
+
+let judgeId=0, myScores=[], finalRank=[], judgeDetails=[], cache={}, groupOpen={};
+
+function cap(v,m){v=parseInt(v)||0;return v<0?0:v>m?m:v}
+function qs(s){return document.querySelector(s)}
+function qsa(s){return document.querySelectorAll(s)}
+
+function init(){
+  const sel=document.getElementById('judgeSel');
+  for(let i=1;i<=43;i++){const o=document.createElement('option');o.value=i;o.textContent=JN[i];sel.appendChild(o)}
+  sel.onchange=function(){judgeId=parseInt(this.value)||0;updateUI();if(judgeId)loadScores()}
+  renderTeachers();
+  checkBackend();
+}
+
+async function checkBackend(){
+  try{const r=await fetch(API.replace('/api','')+'/health',{signal:AbortSignal.timeout(8000)});const d=await r.json();qs('#statusBack').textContent=d.status==='ok'?'🟢 在线':'🔴 离线'}catch(e){qs('#statusBack').textContent='🔴 离线'}
+}
+
+function renderTeachers(){
+  const gs={};
+  TL.forEach(t=>{if(!gs[t.group])gs[t.group]=[];gs[t.group].push(t)});
+  let h='';
+  Object.keys(gs).forEach(gn=>{
+    const key=gn.replace(/\s/g,'');
+    if(groupOpen[key]===undefined)groupOpen[key]=false;
+    h+='<div class="gc"><div class="gt" onclick="toggleGroup(\''+key+'\')">📋 '+gn+'<span class="arw'+(groupOpen[key]?' op':'')+'">▼</span></div><div class="grid" id="g_'+key+'"'+(groupOpen[key]?'':' style="display:none"')+'>';
+    gs[gn].forEach((t,i)=>{
+      // 禁止自评：评委和自己同名的不显示
+      if(judgeId === t.id && judgeId <= 36) return;
+      const sid='t'+t.id;
+      if(!cache[sid])cache[sid]={sc:{ob:0,cm:0,cl:0,qa:0,qw:0,qp:0},rm1:'',rm2:'',rm3:'',sv:false,ed:false,open:false};
+      const c=cache[sid];
+      h+='<div class="tc"><div class="ch" onclick="toggleT(\''+sid+'\')" style="cursor:pointer"><div><span class="nm">'+t.name+'</span>'+
+        (c.ed?'<span class="bdg bdg-e">✎ 修改中</span>':'')+
+        (c.sv&&!c.ed?'<button class="mdf" onclick="event.stopPropagation();startEdit(\''+sid+'\')">✏ 修改</button>':'')+
+        '</div></div><div class="sw" style="display:'+(c.open?'flex':'none')+'">'+
+        '<div class="sn"><h4>👥 小组教研(满分70)</h4>'+
+        dimHTML('ob','📌 观察分析',0,20,sid)+dimHTML('cm','💬 沟通表达',0,25,sid)+dimHTML('cl','🤝 团队协作',0,25,sid)+
+        '<div class="stt">小计：'+(c.sc.ob+c.sc.cm+c.sc.cl)+'/70</div>'+
+        (judgeId>=37?sugHTML(sid,c,1):'')+'</div>'+
+        '<div class="sn"><h4>🎤 即时问答(满分30)</h4>'+
+        dimHTML('qa','📖 问题分析',0,5,sid)+dimHTML('qw','✨ 教育智慧',0,10,sid)+dimHTML('qp','🎙️ 现场表现',0,5,sid)+
+        '<div class="stt">小计：'+(c.sc.qa+c.sc.qw+c.sc.qp)+'/30</div>'+
+        sugHTML(sid,c,3)+'</div>';
+      h+='</div><div class="cf">'+
+        '<button class="btn '+(c.ed?'btn-w':(c.sv?'btn-s':'btn-p'))+'" onclick="event.stopPropagation();submitOne('+t.id+',\''+sid+'\')">'+(c.ed?'💾 保存修改':(c.sv?'✓ 已保存':'💾 提交'))+'</button></div></div>';
+    });
+    h+='</div></div>';
+  });
+  document.getElementById('groups').innerHTML=h;
+}
+
+function dimHTML(f,lb,min,max,sid){
+  const c=cache[sid].sc;
+  return '<div class="sr"><lb>'+lb+' ('+min+'-'+max+')：<span style="font-weight:400">'+c[f]+'分</span></lb><input type="number" value="'+c[f]+'" min="'+min+'" max="'+max+'" onchange="updateScore(\''+sid+'\',\''+f+'\',this,'+max+')"></div>';
+}
+function sugHTML(sid,c,sec){
+  if(sec==1)return '<div class="sr" style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px"><lb>📝 小组教研建议说明</lb><textarea rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:6px;font-size:.8rem;resize:vertical" placeholder="小组教研评价建议..." onchange="updateRemark(\''+sid+'\',1,this)">'+(c.rm1||'')+'</textarea></div>';
+  if(sec==2)return '<div class="sr" style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px"><lb>📝 即时问答建议说明</lb><textarea rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:6px;font-size:.8rem;resize:vertical" placeholder="即时问答评价建议..." onchange="updateRemark(\''+sid+'\',2,this)">'+(c.rm2||'')+'</textarea></div>';
+  // sec==3: 即时问答下方的通用建议说明（所有评委可见）
+  return '<div class="sr" style="margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:8px"><lb>💡 建议说明</lb><textarea rows="2" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:6px;font-size:.8rem;resize:vertical" placeholder="对该教师的建议和说明..." onchange="updateRemark(\''+sid+'\',3,this)">'+(c.rm3||'')+'</textarea></div>';
+}
+
+function updateScore(sid,f,el,max){const v=parseInt(el.value)||0;cache[sid].sc[f]=v<0?0:v>max?max:v;renderTeachers()}
+function updateRemark(sid,idx,el){if(idx==1)cache[sid].rm1=el.value||'';else if(idx==2)cache[sid].rm2=el.value||'';else cache[sid].rm3=el.value||''}
+function toggleGroup(key){groupOpen[key]=!groupOpen[key];renderTeachers()}
+function toggleT(sid){cache[sid].open=!cache[sid].open;renderTeachers()}
+function startEdit(sid){cache[sid].ed=true;renderTeachers()}
+
+function updateUI(){
+  qs('#btnLoad').disabled=!judgeId;
+  qs('#btnSubmit').disabled=!judgeId;
+  qs('#statusJudge').textContent=judgeId?'👤 '+JN[judgeId]:'';
+}
+
+async function loadScores(clr){
+  if(!judgeId)return;
+  if(clr)cache={};
+  myScores=[];finalRank=[];
+  // 所有评委不加载已有数据，页面保持空白（后端数据不变）
+  updateUI();renderTeachers();return;
+  try{
+    const[s,r]=await Promise.all([fetch(API+'/scores/'+judgeId).then(r=>r.json()),fetch(API+'/final-rank').then(r=>r.json())]);
+    myScores=s;finalRank=r;
+    // 将已保存的评分加载到缓存
+    myScores.forEach(sc=>{
+      const sid='t'+sc.teacherId;
+      if(!cache[sid])cache[sid]={sc:{ob:0,cm:0,cl:0,qa:0,qw:0,qp:0},rm1:'',rm2:'',rm3:'',sv:false,ed:false,open:false};
+      const c=cache[sid];
+      c.sc.ob=sc.observation||0;c.sc.cm=sc.communication||0;c.sc.cl=sc.collaboration||0;
+      c.sc.qa=sc.qAnalysis||0;c.sc.qw=sc.qWisdom||0;c.sc.qp=sc.qPerformance||0;
+      c.rm1=sc.remarkObs||'';c.rm2=sc.remarkCom||'';c.rm3=sc.remarkColl||'';c.sv=true;
+    });
+  }catch(e){alert('加载失败:'+e.message)}
+  updateUI();
+  renderTeachers();
+}
+
+async function submitOne(tid,sid){
+  if(!judgeId)return alert('请选评委');
+  const c=cache[sid];if(!c)return;
+  try{
+    const b={judgeId,teacherId:tid,scores:{observation:c.sc.ob,communication:c.sc.cm,collaboration:c.sc.cl,qAnalysis:c.sc.qa,qWisdom:c.sc.qw,qPerformance:c.sc.qp},remarks:{observationRemark:c.rm1||'',communicationRemark:c.rm2||'',collaborationRemark:c.rm3||'',qAnalysisRemark:'',qWisdomRemark:'',qPerformanceRemark:''}};
+    await fetch(API+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+    c.sv=true;c.ed=false;
+    await loadScores();
+  }catch(e){alert('提交失败')}
+}
+
+async function submitAll(){
+  if(!judgeId)return alert('请选评委');
+  if(!confirm('一键提交全部36位？'))return;
+  let ok=0,fail=0;
+  for(const t of TL){
+    const c=cache['t'+t.id];if(!c)continue;
+    try{
+      const b={judgeId,teacherId:t.id,scores:{observation:c.sc.ob,communication:c.sc.cm,collaboration:c.sc.cl,qAnalysis:c.sc.qa,qWisdom:c.sc.qw,qPerformance:c.sc.qp},remarks:{observationRemark:c.rm1||'',communicationRemark:c.rm2||'',collaborationRemark:c.rm3||'',qAnalysisRemark:'',qWisdomRemark:'',qPerformanceRemark:''}};
+      await fetch(API+'/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+      c.sv=true;c.ed=false;ok++;
+    }catch(e){fail++}
+  }
+  alert('完成：成功'+ok+'位'+(fail?',失败'+fail+'位':''));
+  if(ok)await loadScores();
+}
+
+init();
+</script>
+</body>
+</html>
