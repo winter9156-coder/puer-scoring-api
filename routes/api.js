@@ -280,4 +280,113 @@ router.get('/analysis', async (req, res) => {
   }
 });
 
+// ===== 按小组查看每位教师的所有评委评分明细 =====
+router.get('/group-score-details', async (req, res) => {
+  try {
+    // 评委姓名映射
+    const JUDGE_NAMES = {
+      1:'刘沂柠',2:'杨柳',3:'郭宇涵',4:'张雨晴',5:'李昕怡',6:'蔡涵',
+      7:'周岩',8:'芦丽',9:'王文雪',10:'徐可新',11:'张建梅',12:'孙乐',
+      13:'张冉',14:'纪思曼',15:'都建昀',16:'尹亭蕊',17:'张斯婕',18:'苏琦蕊',
+      19:'邢佳杰',20:'王旻姣',21:'刘茜',22:'谷雨',23:'王玉',24:'徐佳',
+      25:'李亚洁',26:'姜媛',27:'鲁晨曦',28:'李梦',29:'马正颖',30:'富佳妍',
+      31:'程紫玉',32:'田鑫颖',33:'李一帆',34:'伊金宝',35:'张淼',36:'李晓娇',
+      37:'王洋洋',38:'李念东',39:'吴瑸',40:'刘玉红',41:'刘珊珊',42:'刘梦',43:'李颖王兰'
+    };
+
+    // 查询所有评分明细（含教师分组信息）
+    const { rows } = await getPool().query(`
+      SELECT
+        t.id AS "teacherId", t.name AS "teacherName", t."group" AS "teacherGroup",
+        s."judgeId",
+        s.observation, s.communication, s.collaboration,
+        s."qAnalysis", s."qWisdom", s."qPerformance",
+        s."remarkObs", s."remarkColl",
+        s."submitTime"
+      FROM scores s
+      JOIN teachers t ON t.id = s."teacherId"
+      WHERE s."isFinal" = 1
+      ORDER BY t."group", t.id, s."judgeId"
+    `);
+
+    // 按 小组 → 教师 → 评委 三级结构组织数据
+    const groupMap = {};
+
+    rows.forEach(r => {
+      const grp = r.teacherGroup;
+      if (!groupMap[grp]) groupMap[grp] = {};
+
+      const tid = r.teacherId;
+      if (!groupMap[grp][tid]) {
+        groupMap[grp][tid] = {
+          teacherId: tid,
+          teacherName: r.teacherName,
+          teacherGroup: grp,
+          judgeScores: [],
+          // 汇总统计
+          stats: { count: 0, total: 0, max: 0, min: 999, avgTeacher: null, avgExpert: null }
+        };
+      }
+
+      const total = parseFloat(r.observation) + parseFloat(r.communication) +
+                    parseFloat(r.collaboration) + parseFloat(r.qAnalysis) +
+                    parseFloat(r.qWisdom) + parseFloat(r.qPerformance);
+
+      groupMap[grp][tid].judgeScores.push({
+        judgeId: r.judgeId,
+        judgeName: JUDGE_NAMES[r.judgeId] || ('评委' + r.judgeId),
+        judgeType: r.judgeId >= 37 ? '专家评委' : '教师评委',
+        observation: parseFloat(r.observation),
+        communication: parseFloat(r.communication),
+        collaboration: parseFloat(r.collaboration),
+        qAnalysis: parseFloat(r.qAnalysis),
+        qWisdom: parseFloat(r.qWisdom),
+        qPerformance: parseFloat(r.qPerformance),
+        groupScore: parseFloat(r.observation) + parseFloat(r.communication) + parseFloat(r.collaboration),
+        qaScore: parseFloat(r.qAnalysis) + parseFloat(r.qWisdom) + parseFloat(r.qPerformance),
+        totalScore: parseFloat(total.toFixed(2)),
+        remark: r.remarkObs || r.remarkColl || '',
+        submitTime: r.submitTime
+      });
+    });
+
+    // 计算汇总统计
+    const result = Object.keys(groupMap).map(grp => {
+      const teachers = Object.values(groupMap[grp]).map(t => {
+        const scores = t.judgeScores.map(j => j.totalScore);
+        const teacherScores = t.judgeScores.filter(j => j.judgeType === '教师评委').map(j => j.totalScore);
+        const expertScores = t.judgeScores.filter(j => j.judgeType === '专家评委').map(j => j.totalScore);
+
+        const avg = arr => arr.length ? parseFloat((arr.reduce((a,b) => a+b, 0) / arr.length).toFixed(2)) : null;
+
+        return {
+          ...t,
+          stats: {
+            judgeCount: scores.length,
+            avgScore: avg(scores),
+            maxScore: scores.length ? Math.max(...scores) : null,
+            minScore: scores.length ? Math.min(...scores) : null,
+            avgTeacherJudge: avg(teacherScores),
+            avgExpertJudge: avg(expertScores)
+          }
+        };
+      });
+
+      // 小组内按综合均分降序
+      teachers.sort((a, b) => (b.stats.avgScore || 0) - (a.stats.avgScore || 0));
+
+      return {
+        group: grp,
+        teacherCount: teachers.length,
+        teachers
+      };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('获取小组评分明细失败:', err);
+    res.status(500).json({ error: '服务器错误: ' + err.message });
+  }
+});
+
 module.exports = router;
