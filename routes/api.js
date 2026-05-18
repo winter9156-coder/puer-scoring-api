@@ -403,4 +403,23 @@ router.get('/group-score-details', async (req, res) => {
   }
 });
 
+// ===== 清除全0评分数据（一键提交产生的垃圾数据） =====
+router.post('/clean-zero-scores', async (req, res) => {
+  try {
+    const { rowCount } = await getPool().query(`
+      DELETE FROM scores
+      WHERE observation = 0
+        AND communication = 0
+        AND collaboration = 0
+        AND "qAnalysis" = 0
+        AND "qWisdom" = 0
+        AND "qPerformance" = 0
+    `);
+    res.json({ success: true, deleted: rowCount, message: `已清除 ${rowCount} 条全0评分记录` });
+  } catch (err) {
+    console.error('清除全0数据失败:', err);
+    res.status(500).json({ error: '清除失败: ' + err.message });
+  }
+});
+
 module.exports = router;
