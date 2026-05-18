@@ -115,8 +115,22 @@ router.get('/final-rank', async (req, res) => {
       qWisdom: parseFloat(row.qWisdom),
       qPerformance: parseFloat(row.qPerformance),
       judgeCount: parseInt(row.judgeCount),
-      rank: idx + 1
+      rank: idx + 1,
+      // 确定所属园区（group 字段包含园名）
+      garden: row.group && row.group.includes('蒲安里') ? '蒲安里园' :
+              row.group && row.group.includes('建邦') ? '建邦华府园' : '其他'
     }));
+
+    // 为每个园区计算内部排名（按 totalScore 降序）
+    const gardenRankMap = {};
+    result.forEach(t => {
+      if (!gardenRankMap[t.garden]) gardenRankMap[t.garden] = [];
+      gardenRankMap[t.garden].push(t);
+    });
+    Object.values(gardenRankMap).forEach(arr => {
+      arr.sort((a, b) => b.totalScore - a.totalScore);
+      arr.forEach((t, i) => { t.gardenRank = i + 1; });
+    });
 
     res.json(result);
   } catch (err) {
